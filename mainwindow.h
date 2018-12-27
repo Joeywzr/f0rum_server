@@ -27,10 +27,14 @@ public:
     ~MainWindow();
 private slots:
     void start_listen();
+    void new_connect();
+    void sign_in();
+    void send_messages();
     void load_file();
     void send_user_data();
     void send_post_data();
     void closeEvent(QCloseEvent *event);
+    void disconnect_info();
 private:
     Ui::MainWindow *ui;
     QFile file1;//文件对象
@@ -41,6 +45,7 @@ private:
     QTcpServer *tcpserver;
     QTcpSocket *tcpsocket;
     QTimer timer;
+    QString console;
 };
 
 #endif // MAINWINDOW_H

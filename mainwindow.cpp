@@ -44,90 +44,97 @@ MainWindow::MainWindow(QWidget *parent) :
 void MainWindow::start_listen()
 {
     tcpserver = new QTcpServer(this);
-    qDebug()<<"开始监听";
+    console.append("开始监听...\n");
+    ui->message->setPlainText(console);
     //监听任何连上19999端口的ip
-    tcpserver->listen(QHostAddress::Any,19999);
+    tcpserver->listen(QHostAddress::Any,19999);    
+    //新连接信号触发，调用槽函数
+    connect(tcpserver,SIGNAL(newConnection()),this,SLOT(new_connect()));
+}
+
+void MainWindow::new_connect()
+{
+    tcpsocket = new QTcpSocket(this);
     QString ip =  tcpsocket->peerAddress().toString();
     quint16 port = tcpsocket->peerPort();
-    QString str = QString("[%1:%2] 成功连接").arg(ip).arg(port);
-    qDebug()<< str;
-    //新连接信号触发，调用槽函数，这个跟信号函数一样可以随便取
-    connect(tcpserver,SIGNAL(newConnection()),this,SLOT(load_file()));
+    if(ip.isEmpty())
+        ip = "127.0.0.1";
+    QString str = QString("[%1:%2] 成功连接!\n").arg(ip).arg(port);
+    console.append(str);
+    ui->message->setPlainText(console);
+    tcpsocket = tcpserver->nextPendingConnection();
+    connect(tcpsocket,SIGNAL(readyRead()),this,SLOT(sign_in()));
+    connect(tcpsocket,SIGNAL(disconnected()),this,SLOT(disconnect_info()),Qt::QueuedConnection);
+}
+
+void MainWindow::sign_in()
+{
+    QByteArray login_info = tcpsocket->readAll();
+    QList<QString> login_list = QVariant(login_info).toString().split(" ");
+    QString username_input = login_list[0];
+    QString password_input = login_list[1];
+    QString username_wrong = "UDE";
+    QString password_wrong = "PIW";
+
+    User u;
+    for(int i = 0;i < all_users.size();i++)
+    {
+        u = all_users[i];
+        if(username_input == u.username)
+        {
+            if(password_input == u.password)
+            {
+                QString level = u.level;
+                level.append(" ");
+                QString responsible_plate = QString::number(u.responsible_plate);
+                responsible_plate.append(" ");
+                QString id = QString::number(u.id);
+                tcpsocket->write(level.toStdString().c_str(),strlen(level.toStdString().c_str()));
+                tcpsocket->write(responsible_plate.toStdString().c_str(),strlen(responsible_plate.toStdString().c_str()));
+                tcpsocket->write(id.toStdString().c_str(),strlen(id.toStdString().c_str()));
+                console.append("登录成功！\n");
+                ui->message->setPlainText(console);
+                return;
+            }
+            tcpsocket->write(password_wrong.toStdString().c_str(),strlen(password_wrong.toStdString().c_str()));
+            console.append("密码错误！\n");
+            ui->message->setPlainText(console);
+            return;
+        }
+    }
+    tcpsocket->write(username_wrong.toStdString().c_str(),strlen(username_wrong.toStdString().c_str()));
+    console.append("用户名不存在！\n");
+    ui->message->setPlainText(console);
+    return;
+}
+
+void MainWindow::send_messages()
+{
+
 }
 
 void MainWindow::load_file()
 {
 
-    file1size = file1.size();
-    file2size = file2.size();
-
-//    connect(&timer,&QTimer::timeout,[=](){ timer.stop();send_user_data();});
-
-//    QString head = QString("0&%1&%2").arg("user.txt").arg(file1size);
-//    qint64 len = tcpsocket->write(head.toUtf8());
-//    if( len < 0 )
-//    {
-//        qDebug()<<"用户头文件没有发送成功";
-//        file1.close();
-//    }
-//    timer.start(20);//防止粘包
-//    file1.close();
-//    file2.close();
 }
 
 
 void MainWindow::send_user_data()
 {
-//    qint64 len = 0;
-//    do{
-//        len = 0;
-//        char buf[4*1024] = {0};//每次发送数据大小
-//        len = file1.read(buf,sizeof(buf));//读文件
-//        len = tcpsocket->write(buf,len);//发文件
-//        sendsize += len;
-//    }while(len > 0);
 
-//    if(sendsize != file1size)
-//    {
-//        file1.close();
-//        qDebug()<<"用户文件未发送完全";
-//        return ;
-//    }
-//    qDebug()<<"用户文件发送完毕";
-//    file1.close();
-
-//    connect(&timer,&QTimer::timeout,[=](){ timer.stop();send_post_data();});
-
-//    QString head = QString("0&%1&%2").arg("post.txt").arg(file2size);
-//    len = tcpsocket->write(head.toUtf8());
-//    if( len < 0 )
-//    {
-//        qDebug()<<"帖子头文件没有发送成功";
-//        file2.close();
-//    }
-//    timer.start(20);//防止粘包
 }
 
 void MainWindow::send_post_data()
 {
-//    qint64 len = 0;
-//    do{
-//        len = 0;
-//        char buf[4*1024] = {0};//每次发送数据大小
-//        len = file2.read(buf,sizeof(buf));//读文件
-//        len = tcpsocket->write(buf,len);//发文件
-//        sendsize += len;
-//    }while(len > 0);
 
-//    if(sendsize != file2size)
-//    {
-//        file2.close();
-//        qDebug()<<"帖子文件未发送完全";
-//        return ;
-//    }
+}
 
-//    qDebug()<<"帖子文件发送完毕";
-//    file2.close();
+void MainWindow::disconnect_info()
+{
+    console.append("断开连接！\n");
+    ui->message->setPlainText(console);
+    tcpsocket->abort();
+    tcpserver->close();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

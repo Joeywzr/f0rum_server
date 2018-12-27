@@ -18,10 +18,7 @@
     <item row="0" column="0">
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QTextEdit" name="message"/>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="lineEdit"/>
+       <widget class="QPlainTextEdit" name="message"/>
       </item>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout">

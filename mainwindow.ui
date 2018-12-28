@@ -30,13 +30,6 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="send">
-          <property name="text">
-           <string>发送消息</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QPushButton" name="quit">
           <property name="text">
            <string>退出</string>

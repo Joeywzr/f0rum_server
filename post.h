@@ -8,7 +8,7 @@ typedef enum
     novice=1,
     technology,
     resources,
-    relex,
+    relax,
     appeal
 }Category;
 
@@ -45,7 +45,7 @@ public:
             case 3:
                 state = resources;s = "resources";break;
             case 4:
-                state = relex;s = "relex";break;
+                state = relax;s = "relax";break;
             case 5:
                 state = appeal;s = "appeal";break;
             default:break;
@@ -129,8 +129,8 @@ public:
                         all_post[technology].push_back(posts);
                     else if(posts.state == "resources")
                         all_post[resources].push_back(posts);
-                    else if(posts.state == "relex")
-                        all_post[relex].push_back(posts);
+                    else if(posts.state == "relax")
+                        all_post[relax].push_back(posts);
                     else if(posts.state == "appeal")
                         all_post[appeal].push_back(posts);
                 }

@@ -35,6 +35,8 @@ private slots:
     void send_post_data();
     void closeEvent(QCloseEvent *event);
     void disconnect_info();
+    void on_quit_clicked();
+
 private:
     Ui::MainWindow *ui;
     QFile file1;//文件对象

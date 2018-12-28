@@ -94,6 +94,8 @@ void MainWindow::sign_in()
                 tcpsocket->write(id.toStdString().c_str(),strlen(id.toStdString().c_str()));
                 console.append("登录成功！\n");
                 ui->message->setPlainText(console);
+                disconnect(tcpsocket,SIGNAL(readyRead()),this,SLOT(sign_in()));
+                connect(tcpsocket,SIGNAL(readyRead()),this,SLOT(send_messages()));
                 return;
             }
             tcpsocket->write(password_wrong.toStdString().c_str(),strlen(password_wrong.toStdString().c_str()));
@@ -110,7 +112,51 @@ void MainWindow::sign_in()
 
 void MainWindow::send_messages()
 {
+    QByteArray login_info = tcpsocket->readAll();
+    QString ss = QVariant(login_info).toString();
+    QTextStream fout(tcpsocket);
+    QVector<Post> p;
+    if(ss == "novice")
+        p = all_post[novice];
+    else if(ss == "technology")
+        p = all_post[technology];
+    else if(ss == "resources")
+        p = all_post[resources];
+    else if(ss == "relax")
+        p = all_post[relax];
+    else if(ss == "appeal")
+        p = all_post[appeal];
 
+    bool is_first = true;
+    for(int j = 0;j < p.size();j++)
+    {
+        Post posts;
+        posts = p[j];
+        if(!is_first)
+            fout << " ### ";   //把每个帖子用" ### "分隔
+        fout << ss << " $$$ ";  //把每个帖子的内部信息用" $$$ "分隔
+        fout << QString::number(posts.id) << " $$$ ";
+        fout << posts.poster_name << " $$$ ";
+        fout << posts.time << " $$$ ";
+        fout << QString::number(posts.comment_num) << " $$$ ";
+        fout << posts.title << " $$$ ";
+        fout << posts.content;
+        if(posts.comment.size() != 0)
+            fout << " $$$ ";
+        for(int k = 0;k < posts.comment.size();k++)
+        {
+            fout << posts.comment[k].username << " $$$ ";
+            fout << posts.comment[k].time << " $$$ ";
+            fout << posts.comment[k].content;
+            if(k != posts.comment.size() - 1)
+                fout << " $$$ ";
+        }
+        is_first = false;
+    }
+    fout << "None";
+    QString info = "读取" + ss + "帖子信息!\n";
+    console.append(info);
+    ui->message->setPlainText(console);
 }
 
 void MainWindow::load_file()
@@ -160,4 +206,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::on_quit_clicked()
+{
+    this->close();
 }
